@@ -3,12 +3,14 @@ function MyComponent() {
   const [error, setError] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [items, setItems] = useState([]);
+  const [initialDate,setDate] = useState(new Date());
   var query = window.location.pathname;
   var base = "http://127.0.0.1:8080"
   useEffect(() => {
     fetch(base + query)
   .then((response) => {
     if(response.status === 200){
+        setDate(new Date());
         console.log("SUCCESSS")     
     }else{
         console.log("SOMETHING WENT WRONG")
@@ -30,6 +32,7 @@ function MyComponent() {
   } 
   else {
     return (
+      <div>
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
       <table>
         <tr>
@@ -43,6 +46,8 @@ function MyComponent() {
              </tr>;})}
       </table>
       </div>
+   <p style={{ display: "flex", justifyContent: "center"}}>Last Updated: {String(initialDate)}</p>
+   </div>
     )
   }
 }

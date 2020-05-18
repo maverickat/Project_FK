@@ -49,13 +49,24 @@ public class DummyDataRepository implements DataRepository{
                 d.add(i);
             }
         }
+
         return d;
     }
 
     @Override
     public Data addData(Data data,String case_id){
+        boolean f = true;
+        for(Data i: alldata){
+            if(i.getCase_id().equals(case_id)){
+                i.setBranch_id(data.getBranch_id());
+                i.setTechnician_id(data.getTechnician_id());
+                f=false;
+                break;
+            }
+        }
+        if(f){
         data.setCase_id(case_id);
-        alldata.add(data);
+        alldata.add(data);}
         return data;
     }
 }
