@@ -1,6 +1,7 @@
 package com.example.core;
 
 import com.example.api.Data;
+import com.example.resources.ProjectResource;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.CollectionType;
 import com.google.common.base.Charsets;
@@ -49,24 +50,26 @@ public class DummyDataRepository implements DataRepository{
                 d.add(i);
             }
         }
-
         return d;
     }
 
     @Override
     public Data addData(Data data,String case_id){
         boolean f = true;
+        data.setCase_id(case_id);
+        String s = data.getBranch_id();
         for(Data i: alldata){
             if(i.getCase_id().equals(case_id)){
+                s = i.getBranch_id();
                 i.setBranch_id(data.getBranch_id());
                 i.setTechnician_id(data.getTechnician_id());
                 f=false;
                 break;
             }
         }
-        if(f){
-        data.setCase_id(case_id);
-        alldata.add(data);}
+        if(f)
+        alldata.add(data);
+        data.setBranch_id(s);
         return data;
     }
 }
