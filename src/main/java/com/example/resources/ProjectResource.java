@@ -3,6 +3,7 @@ package com.example.resources;
 import com.example.api.Data;
 import com.example.core.ClientProp;
 import com.example.core.DataRepository;
+import com.example.core.KafkaPub;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import javax.ws.rs.*;
@@ -21,7 +22,7 @@ public class ProjectResource {
     public ProjectResource(DataRepository repository) {
         this.repository = repository;
     }
-    private void PublishData(String branch_id){
+    public void PublishData(String branch_id){
         if(clients.containsKey(branch_id)){
             Iterator<ClientProp> i = clients.get(branch_id).iterator();
             while(i.hasNext()) {
@@ -53,9 +54,10 @@ public class ProjectResource {
     public Data addData(@PathParam("case_id") String case_id,Data data) throws JsonProcessingException {
         String b_id = data.getBranch_id();
         Data x = repository.addData(data, case_id);
-        PublishData(b_id);
-        if(!x.getBranch_id().equals(b_id))
-        PublishData(x.getBranch_id());
+        KafkaPub.PubData(b_id);
+        if(!x.getBranch_id().equals(b_id)){
+            KafkaPub.PubData(x.getBranch_id());
+        }
         x.setBranch_id(b_id);
         return x;
     }

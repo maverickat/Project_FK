@@ -9,8 +9,8 @@ function MyComponent(){
   useEffect(()=>{
   var query = window.location.pathname;
   var qpa = query.split("/");
-  var base = "http://127.0.0.1:8080";
-  fetch(base + "/allocation/"+qpa[2])
+  var base = "http://127.0.0.1:";
+  fetch(base + qpa[1] + "/allocation/"+qpa[3])
   .then((response) => {
   if(response.status === 200){
       setDate(new Date());
@@ -27,7 +27,7 @@ function MyComponent(){
         setIsLoaded(false);
         setError(error);
         })
-  let source = new EventSource(base+query);
+  let source = new EventSource(base+qpa[1]+"/"+qpa[2]+"/"+qpa[3]);
   source.onopen = (e)=>{
     console.log("Connection Established")
     }
