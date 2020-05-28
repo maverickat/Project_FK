@@ -3,17 +3,14 @@ package com.example.resources;
 import com.example.api.Data;
 import com.example.core.ClientProp;
 import com.example.core.DataRepository;
-import com.example.core.KafkaPub;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.sse.OutboundSseEvent;
-import javax.ws.rs.sse.Sse;
-import javax.ws.rs.sse.SseEventSink;
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.*;
-import java.util.concurrent.CompletionStage;
 
 @Path("/")
 public class ProjectResource {
@@ -22,16 +19,37 @@ public class ProjectResource {
     public ProjectResource(DataRepository repository) {
         this.repository = repository;
     }
-    public void PublishData(String branch_id){
-        if(clients.containsKey(branch_id)){
-            Iterator<ClientProp> i = clients.get(branch_id).iterator();
-            while(i.hasNext()) {
-                ClientProp c = i.next();
-                if (c.getSink().isClosed())
-                    i.remove();
-                else
-                    SendEvent(branch_id, c.getSink(), c.getSse());
+
+    public void PublishData(String branch_id) throws IOException {
+
+        ObjectMapper mapper = new ObjectMapper();
+        String msg = null;
+        try {
+            msg = mapper.writeValueAsString(branchWise(branch_id));
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        String NodeJsUrl = "http://127.0.0.1:3001/dashboard/" + branch_id;
+        URL url = new URL(NodeJsUrl);
+        HttpURLConnection con = (HttpURLConnection)url.openConnection();
+        con.setRequestMethod("POST");
+        con.setRequestProperty("Content-Type", "application/json");
+        con.setRequestProperty("Accept", "application/json");
+        con.setDoOutput(true);
+        con.setDoInput (true);
+        DataOutputStream output = new DataOutputStream(con.getOutputStream());
+        output.writeBytes(msg);
+        output.flush();
+        output.close();
+        try(BufferedReader br = new BufferedReader(
+                new InputStreamReader(con.getInputStream(), "utf-8"))) {
+            StringBuilder response = new StringBuilder();
+            String responseLine = null;
+            while ((responseLine = br.readLine()) != null) {
+                response.append(responseLine.trim());
             }
+            System.out.println(response.toString());
+            con.disconnect();
         }
     }
     @GET
@@ -51,49 +69,14 @@ public class ProjectResource {
     @POST
     @Path("allocation/{case_id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Data addData(@PathParam("case_id") String case_id,Data data) throws JsonProcessingException {
+    public Data addData(@PathParam("case_id") String case_id,Data data) throws IOException {
         String b_id = data.getBranch_id();
         Data x = repository.addData(data, case_id);
-        KafkaPub.PubData(b_id);
+        PublishData(b_id);
         if(!x.getBranch_id().equals(b_id)){
-            KafkaPub.PubData(x.getBranch_id());
+            PublishData(x.getBranch_id());
         }
         x.setBranch_id(b_id);
         return x;
-    }
-    @Path("dashboard/{branch_id}")
-    @GET
-    @Produces(MediaType.SERVER_SENT_EVENTS)
-    public void getServerSentEvents(@PathParam("branch_id") String branch_id,@Context SseEventSink eventSink, @Context Sse sse) {
-        new Thread(() -> {
-            ClientProp c = new ClientProp(eventSink,sse);
-            if(clients.containsKey(branch_id)){
-                clients.get(branch_id).add(c);
-            }
-            else{
-                List<ClientProp>  l= new ArrayList<>();
-                l.add(c);
-                clients.put(branch_id,l);
-            }
-            final OutboundSseEvent event = sse.newEventBuilder()
-                    .comment("SSE Connection Established")
-                    .build();
-            eventSink.send(event);
-        }).start();
-    }
-    @Produces(MediaType.SERVER_SENT_EVENTS)
-    public void SendEvent(String branch_id, SseEventSink eventSink, Sse sse){
-        ObjectMapper mapper = new ObjectMapper();
-        String msg = null;
-        try {
-            msg = mapper.writeValueAsString(branchWise(branch_id));
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-        final OutboundSseEvent event = sse.newEventBuilder()
-                .name("message")
-                .data(String.class,msg)
-                .build();
-        eventSink.send(event);
     }
     }

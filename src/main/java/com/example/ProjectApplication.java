@@ -2,8 +2,6 @@ package com.example;
 
 import com.example.core.DataRepository;
 import com.example.core.DummyDataRepository;
-import com.example.core.KafkaPub;
-import com.example.core.KafkaSub;
 import com.example.resources.ProjectResource;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;
@@ -31,8 +29,6 @@ public class ProjectApplication extends Application<ProjectConfiguration> {
     @Override
     public void run(final ProjectConfiguration configuration,
                     final Environment environment) {
-        //for kafka Publisher ... comment if not using
-        KafkaPub.CreatePub();
 
         final FilterRegistration.Dynamic cors = environment.servlets().addFilter("CORS", CrossOriginFilter.class);
         cors.setInitParameter("allowedOrigins", "*");
@@ -45,10 +41,6 @@ public class ProjectApplication extends Application<ProjectConfiguration> {
         DataRepository repository = new DummyDataRepository();
         final ProjectResource resource = new ProjectResource(repository);
         environment.jersey().register(resource);
-        //for kafka Subscriber ... comment if not using
-        new Thread(()->{
-            KafkaSub.KafaSub(resource);
-        }).start();
     }
 
 }

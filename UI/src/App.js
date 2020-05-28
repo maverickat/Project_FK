@@ -10,7 +10,7 @@ function MyComponent(){
   var query = window.location.pathname;
   var qpa = query.split("/");
   var base = "http://127.0.0.1:";
-  fetch(base + qpa[1] + "/allocation/"+qpa[3])
+  fetch(base + "8081/allocation/" + qpa[2])
   .then((response) => {
   if(response.status === 200){
       setDate(new Date());
@@ -27,9 +27,9 @@ function MyComponent(){
         setIsLoaded(false);
         setError(error);
         })
-  let source = new EventSource(base+qpa[1]+"/"+qpa[2]+"/"+qpa[3]);
+  let source = new EventSource(base+"3001"+query);
   source.onopen = (e)=>{
-    console.log("Connection Established")
+    console.log("SSE Connection Established")
     }
   source.onmessage = (e) =>{
     console.log("Message recieved");
