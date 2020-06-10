@@ -10,7 +10,7 @@ function MyComponent(){
   var query = window.location.pathname;
   var qpa = query.split("/");
   var base = "http://127.0.0.1:";
-  fetch(base + "8081/allocation/" + qpa[2])
+  fetch(base + "8081/allocation/" + qpa[3])
   .then((response) => {
   if(response.status === 200){
       setDate(new Date());
@@ -37,7 +37,7 @@ function MyComponent(){
     setDate(new Date());
     }
   source.onerror = (e)=>{
-    console.log("SOMETHING WENT WRONG\nClosing Connecction");
+    console.log("SOMETHING WENT WRONG\nClosing Connection");
     setError(true);
     source.close();
     }
