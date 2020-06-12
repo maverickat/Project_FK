@@ -15,9 +15,12 @@ import java.util.*;
 @Path("/")
 public class ProjectResource {
     private DataRepository repository;
-    private Map<String, List<ClientProp>> clients = new HashMap<String, List<ClientProp>>();
+    private Map<String,String> branch_user = new HashMap<>();
     public ProjectResource(DataRepository repository) {
         this.repository = repository;
+        branch_user.put("branch1","user1");
+        branch_user.put("branch2","user2");
+        branch_user.put("branch3","user3");
     }
 
     public void PublishData(String branch_id) throws IOException {
@@ -29,7 +32,7 @@ public class ProjectResource {
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
-        String NodeJsUrl = "http://127.0.0.1:3001/dashboard/" + branch_id;
+        String NodeJsUrl = "http://127.0.0.1:3001/dashboard/" + branch_user.get(branch_id);
         URL url = new URL(NodeJsUrl);
         HttpURLConnection con = (HttpURLConnection)url.openConnection();
         con.setRequestMethod("POST");

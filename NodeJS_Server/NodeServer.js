@@ -8,9 +8,10 @@ const app = express();
 //Publisher
 ch = Pub.PubCon();
 //Subscriber
+chsub = null;
+qsub = null;
 function Sub(){
    var amqp = require('amqplib/callback_api');
-
    amqp.connect('amqp://localhost', function(error0, connection) {
    if (error0) {
        throw error0;
@@ -19,8 +20,8 @@ function Sub(){
        if (error1) {
        throw error1;
        }
-       var exchange = 'SSEmsg';
-       channel.assertExchange(exchange, 'fanout', {
+       var exchange = 'SSE';
+       channel.assertExchange(exchange, 'direct', {
        durable: false
        });
        channel.assertQueue('', {
@@ -29,10 +30,12 @@ function Sub(){
        if (error2) {
            throw error2;
        }
-       channel.bindQueue(q.queue, exchange, '');
+       chsub = channel
+       qsub = q
        channel.consume(q.queue, function(msg) {
            if(msg.content) {
-               publishData(msg.fields.routingKey,msg.content.toString())
+            branch_id = JSON.parse(msg.content.toString())[0].branch_id
+               publishData(branch_id,msg.content.toString())
            }
        }, {
            noAck: true
@@ -42,6 +45,10 @@ function Sub(){
    });
 }
 Sub()
+
+function SubBind(chsub,qsub,user_id){
+  chsub.bindQueue(qsub.queue,"SSE",user_id);
+}
 
 //Establishing SSE
 var c = 0;
@@ -60,6 +67,8 @@ function getSSE(req, res) {
     res
   };
   var branch_id = req.params.branch_id;
+  var user_id = req.params.user_id;
+  SubBind(chsub,qsub,user_id)
   if( branch_id in clients){
    clients[branch_id].push(newClient)
   }
@@ -68,7 +77,6 @@ function getSSE(req, res) {
   }
   res.write(":Connection Established \n\n")
   req.on('close', () => {
-      console.log("closed")
       var n = clients[branch_id].length;
         var updated_list = [];
       for(var i = 0;i<n;i++){
@@ -86,8 +94,8 @@ function getSSE(req, res) {
 //Conection between Dropwizard And NodeJs
 function getEvent(req,res){
    var msg = req.body
-   var branch_id = req.params.branch_id
-   Pub.PubMsg(ch,branch_id,JSON.stringify(msg))
+   var user_id = req.params.user_id
+   Pub.PubMsg(ch,user_id,JSON.stringify(msg))
    res.end("Success")
 }
 
@@ -107,7 +115,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 
 app.get('/dashboard/:user_id/:branch_id', getSSE);       //SSE
-app.post('/dashboard/:branch_id',getEvent);              //Dropwizard
+app.post('/dashboard/:user_id',getEvent);              //Dropwizard
 
 const hostname = '127.0.0.1';
 const PORT = 3001;

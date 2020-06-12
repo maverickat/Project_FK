@@ -9,23 +9,21 @@ function Sub(){
         if (error1) {
         throw error1;
         }
-        var exchange = 'SSEmsg';
- 
-        channel.assertExchange(exchange, 'fanout', {
+        var exchange = 'SSE';
+        channel.assertExchange(exchange, 'direct', {
         durable: false
         });
- 
         channel.assertQueue('', {
         exclusive: true
         }, function(error2, q) {
         if (error2) {
             throw error2;
         }
-        channel.bindQueue(q.queue, exchange, '');
+        chsub = channel
+        qsub = q
         channel.consume(q.queue, function(msg) {
             if(msg.content) {
-                // publishData(msg.fields.routingKey,msg.content.toString())
-                console.log(" [x] %s %s",  msg.fields.routingKey, msg.content.toString());
+                publishData(msg.fields.routingKey,msg.content.toString())
             }
         }, {
             noAck: true
@@ -34,4 +32,3 @@ function Sub(){
     });
     });
  }
- Sub();

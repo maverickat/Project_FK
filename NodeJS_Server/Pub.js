@@ -9,9 +9,9 @@ function PubCon(){
             if (error1) {
             throw error1;
             }
-            var exchange = 'SSEmsg';
+            var exchange = 'SSE';
 
-            channel.assertExchange(exchange, 'fanout', {
+            channel.assertExchange(exchange, 'direct', {
             durable: false
             });
             ch = channel;
@@ -20,8 +20,8 @@ function PubCon(){
 return ch;
 }
 
-function PubMsg(ch,branch_id,msg){
-    ch.publish("SSEmsg",branch_id,Buffer.from(msg));
+function PubMsg(ch,user_id,msg){
+    ch.publish("SSE",user_id,Buffer.from(msg));
 }
 
 module.exports = {PubCon,PubMsg};
