@@ -1,5 +1,7 @@
-function PubCon(){
-    ch = null;
+var exchange;
+var ch;
+function PubCon(exchng){
+    exchange = exchng;
     var amqp = require('amqplib/callback_api');
     amqp.connect('amqp://localhost', function(error0, connection) {
         if (error0) {
@@ -9,9 +11,7 @@ function PubCon(){
             if (error1) {
             throw error1;
             }
-            var exchange = 'SSE';
-
-            channel.assertExchange(exchange, 'direct', {
+            channel.assertExchange(exchng, 'direct', {
             durable: false
             });
             ch = channel;
@@ -20,8 +20,8 @@ function PubCon(){
 return ch;
 }
 
-function PubMsg(ch,user_id,msg){
-    ch.publish("SSE",user_id,Buffer.from(msg));
+function PubMsg(user_id,msg){
+    ch.publish(exchange,user_id,Buffer.from(msg));
 }
 
 module.exports = {PubCon,PubMsg};

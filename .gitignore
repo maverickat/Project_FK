@@ -1,0 +1,4 @@
+ NodeJS_Server/.dockerignore
+ NodeJS_Server/Dockerfile
+ NodeJS_Server/node_modules/
+target/classes/com/example/resources/Simple.class

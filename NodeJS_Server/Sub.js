@@ -1,6 +1,9 @@
-function Sub(){
+var chsub;
+var qsub;
+var exchange
+function SubCon(exchng,callback){
     var amqp = require('amqplib/callback_api');
- 
+    exchange = exchng;
     amqp.connect('amqp://localhost', function(error0, connection) {
     if (error0) {
         throw error0;
@@ -9,8 +12,7 @@ function Sub(){
         if (error1) {
         throw error1;
         }
-        var exchange = 'SSE';
-        channel.assertExchange(exchange, 'direct', {
+        channel.assertExchange(exchng, 'direct', {
         durable: false
         });
         channel.assertQueue('', {
@@ -23,7 +25,7 @@ function Sub(){
         qsub = q
         channel.consume(q.queue, function(msg) {
             if(msg.content) {
-                publishData(msg.fields.routingKey,msg.content.toString())
+                callback(msg.fields.routingKey,msg.content.toString())
             }
         }, {
             noAck: true
@@ -32,3 +34,12 @@ function Sub(){
     });
     });
  }
+
+ function SubBind(topic){
+    chsub.bindQueue(qsub.queue,exchange,topic);
+  }
+function SubUnbind(topic){
+  chsub.unbindQueue(qsub.queue,exchange,topic);
+}
+
+ module.exports = {SubCon,SubBind,SubUnbind};

@@ -7,12 +7,21 @@ import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
+
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
 import java.util.EnumSet;
 
 public class ProjectApplication extends Application<ProjectConfiguration> {
     public static void main(final String[] args) throws Exception {
+        for (int i = 0; i < 1; i++) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            ProjectResource.PublishData();
+        }
         new ProjectApplication().run(args);
     }
 
