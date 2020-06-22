@@ -13,6 +13,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +30,15 @@ public class ProjectResource {
             Thread t = new Thread(s);
             t.start();
         }
+    }
+    @GET
+    @Path("dashboard/{user_id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<String> getServices(@PathParam("user_id") String user_id){
+        List<String> l = new ArrayList<>();
+        l.add("Mumbai");
+        l.add("Kolkata");
+        return l;
     }
     @GET
     @Path("allocation")

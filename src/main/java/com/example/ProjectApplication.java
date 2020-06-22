@@ -14,14 +14,14 @@ import java.util.EnumSet;
 
 public class ProjectApplication extends Application<ProjectConfiguration> {
     public static void main(final String[] args) throws Exception {
-        for (int i = 0; i < 1; i++) {
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            ProjectResource.PublishData();
-        }
+//        for (int i = 0; i < 1; i++) {
+//            try {
+//                Thread.sleep(1000);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+//            ProjectResource.PublishData();
+//        }
         new ProjectApplication().run(args);
     }
 

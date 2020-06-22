@@ -1,5 +1,7 @@
 const Pub = require('./Pub') 
 const Sub = require('./Sub')
+const db = require('./MysqlCon')
+const Serv = require('./GetServices')
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -15,6 +17,9 @@ Sub.SubCon("SSE",function(user_id,msg){
     console.log("Recieved:",user_id)
     publishData(user_id,msg)
 });
+
+//Database Connection
+db.dbConnect();
 
 //For Establishing SSE
 var c = 0;
@@ -33,18 +38,27 @@ function getSSE(req, res) {
       res
     };
     var user_id = req.params.user_id;
-    //For storing the connection
-    if( user_id in clients){
-        if(clients[user_id].length===0)
-        Sub.SubBind(user_id)
-        clients[user_id].push(newClient)
-       }
-       else{
-        clients[user_id] = [newClient]
-        Sub.SubBind(user_id)
-       }
     console.log("SSE opened ",user_id)
     res.write(":Connection Established \n\n")
+    //For storing the connection
+    Serv.httpGet("http://localhost:8081/dashboard/"+user_id,function(respServ){
+        services = JSON.parse(respServ);
+        if( user_id in clients){
+            if(clients[user_id].length===0){
+                Sub.SubBind(user_id)
+                db.dbInsert(user_id,services,true);
+            }
+            else{
+                clients[user_id].push(newClient)
+                db.dbInsert(user_id,services,false);
+            }
+        }
+        else{
+            clients[user_id] = [newClient]
+            Sub.SubBind(user_id)
+            db.dbInsert(user_id,services,true);
+        }
+    })
     req.on('close', () => {
         //For deleting the connection
         var n = clients[user_id].length;
@@ -60,6 +74,7 @@ function getSSE(req, res) {
         clients[user_id] = updated_list;
         if(clients[user_id].length===0){
             Sub.SubUnbind(user_id)
+            db.dbDelete(user_id);
         }
         console.log("close: ",user_id)
    });
@@ -68,9 +83,13 @@ function getSSE(req, res) {
 //Conection between Dropwizard And NodeJs
 function getEvent(req,res){
     var msg = req.body
-    var user_id = req.params.user_id
-    console.log("Recievded Dropwizard",user_id)
-    Pub.PubMsg(user_id,JSON.stringify(msg))
+    var service = req.params.service
+    console.log("Recievded Dropwizard",service)
+    db.dbGetUser(service,function(result){
+        for(var i = 0;i<result.length;i++){
+            Pub.PubMsg(result[i].user_id,JSON.stringify(msg));
+        }
+    })
     res.end("Success")
     var d = (new Date).getTime();
     console.log("dropwizard to NodeJS:", d-msg.Date)
@@ -92,7 +111,7 @@ function publishData(user_id,msg){
 
 //Configuration Part For Server
 app.get('/dashboard/:user_id/', getSSE);       //SSE
-app.post('/dashboard/:user_id',getEvent);              //Dropwizard
+app.post('/dashboard/:service',getEvent);              //Dropwizard
 
 const hostname = '127.0.0.1';
 const PORT = 3001;
